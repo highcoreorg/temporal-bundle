@@ -1,5 +1,5 @@
 {
-    "name": "loper/temporal-bundle",
+    "name": "highcore/temporal-bundle",
     "description": "Command Runner and Activity Registry for Temporal",
     "type": "library",
     "license": "MIT",
