@@ -1,0 +1,35 @@
+{
+    "name": "loper/temporal-bundle",
+    "description": "Command Runner and Activity Registry for Temporal",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Loper\\TemporalBundle\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "loper",
+            "email": "bizrenay@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=7.4",
+        "symfony/dependency-injection": "^5.4",
+        "temporal/sdk": "^2.3",
+        "symfony/http-kernel": "^5.4",
+        "symfony/config": "^5.4",
+        "symfony/flex": "^2.2",
+        "symfony/console": "^5.4"
+    },
+    "conflict": {
+        "symfony/symfony": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/flex": true
+        }
+    }
+}
