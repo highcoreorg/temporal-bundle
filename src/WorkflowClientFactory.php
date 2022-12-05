@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Loper\TemporalBundle;
+namespace Highcore\TemporalBundle;
 
 use Temporal\Client\GRPC\ServiceClient;
 use Temporal\Client\WorkflowClient;

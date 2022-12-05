@@ -5,7 +5,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Loper\\TemporalBundle\\": "src/"
+            "Highcore\\TemporalBundle\\": "src/"
         }
     },
     "authors": [

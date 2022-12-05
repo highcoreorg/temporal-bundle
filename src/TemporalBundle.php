@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Loper\TemporalBundle;
+namespace Highcore\TemporalBundle;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
-use Loper\TemporalBundle\Pass\ActivityCompilerPass;
+use Highcore\TemporalBundle\Pass\ActivityCompilerPass;
 
 final class TemporalBundle extends Bundle
 {

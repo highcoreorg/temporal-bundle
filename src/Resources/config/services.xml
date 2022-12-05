@@ -7,12 +7,28 @@
     <services>
         <defaults autowire="true" autoconfigure="true"/>
 
-        <service id="Loper\TemporalBundle\Registry\ActivityRegistry"/>
+        <service id="Highcore\TemporalBundle\Registry\ActivityRegistry"/>
 
-        <service id="Loper\TemporalBundle\WorkflowRuntimeCommand">
-            <argument type="service" id="Loper\TemporalBundle\Registry\ActivityRegistry"/>
+        <service id="Temporal\Worker\WorkerFactoryInterface" alias="Temporal\WorkerFactory"/>
+        <service id="Temporal\WorkerFactory">
+            <factory class="Temporal\WorkerFactory" method="create"/>
+        </service>
+
+        <service id="Highcore\TemporalBundle\WorkflowRuntimeCommand">
+            <argument type="service" id="Temporal\WorkerFactory"/>
+            <argument type="service" id="Highcore\TemporalBundle\Registry\ActivityRegistry"/>
             <argument type="service" id="kernel"/>
             <tag name="console.command"/>
         </service>
+
+        <service id="Highcore\TemporalBundle\WorkflowClientFactory">
+            <argument />
+        </service>
+
+        <service id="Temporal\Client\WorkflowClient">
+            <factory class="Highcore\TemporalBundle\WorkflowClientFactory"/>
+        </service>
+
+        <service id="Temporal\Client\WorkflowClientInterface" alias="Temporal\Client\WorkflowClient"/>
     </services>
 </container>

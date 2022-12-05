@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Loper\TemporalBundle\DependencyInjection;
+namespace Highcore\TemporalBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;

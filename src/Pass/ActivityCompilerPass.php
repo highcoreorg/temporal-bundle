@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Loper\TemporalBundle\Pass;
+namespace Highcore\TemporalBundle\Pass;
 
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
-use Loper\TemporalBundle\Registry\ActivityRegistry;
+use Highcore\TemporalBundle\Registry\ActivityRegistry;
 
 final class ActivityCompilerPass implements CompilerPassInterface
 {

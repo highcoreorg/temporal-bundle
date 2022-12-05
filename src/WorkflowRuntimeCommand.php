@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Loper\TemporalBundle;
+namespace Highcore\TemporalBundle;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -10,7 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Temporal\Worker\WorkerFactoryInterface;
-use Loper\TemporalBundle\Registry\ActivityRegistry;
+use Highcore\TemporalBundle\Registry\ActivityRegistry;
 
 final class WorkflowRuntimeCommand extends Command
 {
@@ -25,7 +25,7 @@ final class WorkflowRuntimeCommand extends Command
     public function __construct(
         WorkerFactoryInterface $workerFactory,
         ActivityRegistry $activityRegistry,
-        KernelInterface $kernel,
+        KernelInterface $kernel
     ) {
         parent::__construct();
         $this->kernel = $kernel;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Loper\TemporalBundle\Registry;
+namespace Highcore\TemporalBundle\Registry;
 
 use Temporal\Activity\ActivityInterface;
 
