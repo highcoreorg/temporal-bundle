@@ -14,36 +14,36 @@ use Highcore\TemporalBundle\Registry\ActivityRegistry;
 
 final class WorkflowRuntimeCommand extends Command
 {
-    public const WORKER_QUEUE = 'worker_queue';
-
     protected static $defaultName = 'temporal:workflow:runtime';
 
     private WorkerFactoryInterface $workerFactory;
     private ActivityRegistry $activityRegistry;
     private KernelInterface $kernel;
+    private ?string $workerQueue;
 
     public function __construct(
         WorkerFactoryInterface $workerFactory,
         ActivityRegistry $activityRegistry,
-        KernelInterface $kernel
+        KernelInterface $kernel,
+        ?string $workerQueue = null
     ) {
         parent::__construct();
         $this->kernel = $kernel;
+        $this->workerQueue = $workerQueue;
         $this->activityRegistry = $activityRegistry;
         $this->workerFactory = $workerFactory;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $workerQueue = $input->getOption(self::WORKER_QUEUE);
         $style = new SymfonyStyle($input, $output);
 
-        if ('' === $workerQueue) {
-            $style->error(\sprintf('Worker queue name "%s" is not valid.', $workerQueue));
+        if ('' === $this->workerQueue) {
+            $style->error(\sprintf('Worker queue name "%s" is not valid.', $this->workerQueue));
             return Command::FAILURE;
         }
 
-        $queueName = $workerQueue ?? WorkerFactoryInterface::DEFAULT_TASK_QUEUE;
+        $queueName = $this->workerQueue ?? WorkerFactoryInterface::DEFAULT_TASK_QUEUE;
         $worker = $this->workerFactory->newWorker($queueName);
 
         foreach ($this->getWorkflowTypes() as $workflowType) {

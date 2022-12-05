@@ -18,6 +18,7 @@
             <argument type="service" id="Temporal\WorkerFactory"/>
             <argument type="service" id="Highcore\TemporalBundle\Registry\ActivityRegistry"/>
             <argument type="service" id="kernel"/>
+            <argument />
             <tag name="console.command"/>
         </service>
 
