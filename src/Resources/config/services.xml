@@ -23,11 +23,11 @@
         </service>
 
         <service id="Highcore\TemporalBundle\WorkflowClientFactory">
-            <argument />
+            <argument key="$temporalCliAddress">%temporal.temporal_cli_address%</argument>
         </service>
 
         <service id="Temporal\Client\WorkflowClient">
-            <factory class="Highcore\TemporalBundle\WorkflowClientFactory"/>
+            <factory service="Highcore\TemporalBundle\WorkflowClientFactory"/>
         </service>
 
         <service id="Temporal\Client\WorkflowClientInterface" alias="Temporal\Client\WorkflowClient"/>
