@@ -9,9 +9,27 @@
 
         <service id="Highcore\TemporalBundle\Registry\ActivityRegistry"/>
 
-        <service id="Temporal\Worker\WorkerFactoryInterface" alias="Temporal\WorkerFactory"/>
+        <service id="Temporal\DataConverter\NullConverter"/>
+        <service id="Temporal\DataConverter\BinaryConverter"/>
+        <service id="Temporal\DataConverter\ProtoJsonConverter"/>
+        <service id="Temporal\DataConverter\JsonConverter"/>
+
+        <service id="Highcore\TemporalBundle\DataConverter\ClassObjectConverter"/>
+
+        <service id="Temporal\DataConverter\DataConverter">
+            <argument type="service" id="Temporal\DataConverter\NullConverter"></argument>
+            <argument type="service" id="Temporal\DataConverter\BinaryConverter"></argument>
+            <argument type="service" id="Temporal\DataConverter\ProtoJsonConverter"></argument>
+            <argument type="service" id="Highcore\TemporalBundle\DataConverter\ClassObjectConverter"></argument>
+            <argument type="service" id="Temporal\DataConverter\JsonConverter"></argument>
+        </service>
+
+        <service id="Highcore\TemporalBundle\WorkerFactory">
+            <argument type="service" id="Temporal\DataConverter\DataConverter"/>
+        </service>
+
         <service id="Temporal\WorkerFactory">
-            <factory class="Temporal\WorkerFactory" method="create"/>
+            <factory service="Highcore\TemporalBundle\WorkerFactory"/>
         </service>
 
         <service id="Highcore\TemporalBundle\WorkflowRuntimeCommand">
