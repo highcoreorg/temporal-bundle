@@ -12,7 +12,7 @@ use Temporal\DataConverter\DataConverterInterface;
 
 interface WorkflowClientFactoryInterface
 {
-    public function setOptions(ClientOptions $options): void;
+    public function setOptions(array $options): void;
     public function setAddress(string $address): void;
     public function setDataConverter(DataConverterInterface $converter): void;
 

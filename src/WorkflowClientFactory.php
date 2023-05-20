@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Highcore\TemporalBundle;
 
+use Highcore\TemporalBundle\Factory\ClientOptionsFactory;
 use Temporal\Client\ClientOptions;
 use Temporal\Client\GRPC\ServiceClient;
 use Temporal\Client\WorkflowClient;
-use Temporal\DataConverter\DataConverter;
 use Temporal\DataConverter\DataConverterInterface;
 
 final class WorkflowClientFactory implements WorkflowClientFactoryInterface
@@ -25,9 +25,9 @@ final class WorkflowClientFactory implements WorkflowClientFactoryInterface
         );
     }
 
-    public function setOptions(ClientOptions $options): void
+    public function setOptions(array $options): void
     {
-        $this->options = $options;
+        $this->options = ClientOptionsFactory::createFromArray($options);
     }
 
     public function setAddress(string $address): void
