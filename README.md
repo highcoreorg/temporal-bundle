@@ -163,8 +163,8 @@ return static function (ContainerConfigurator $configurator): void {
 
 ## Credits
 
-[Official PHP SDK](https://github.com/temporalio/sdk-php)
-[Symfony Framework](https://github.com/symfony/symfony)
+- [Official PHP SDK](https://github.com/temporalio/sdk-php)
+- [Symfony Framework](https://github.com/symfony/symfony)
 
 ## License
 
