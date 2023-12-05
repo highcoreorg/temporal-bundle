@@ -8,7 +8,7 @@ use Temporal\Client\ClientOptions;
 
 final class ClientOptionsFactory
 {
-    public static function createFromArray(array $options): ClientOptions
+    public function createFromArray(array $options): ClientOptions
     {
         $clientOptions = new ClientOptions();
 
