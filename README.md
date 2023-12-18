@@ -20,20 +20,47 @@ Use this command to install
 
 ## Usage
 
-Simple configuration:
+Example rr.yaml:
+```yaml
+version: "3"
+
+server:
+  command: "php bin/console temporal:workflow:runtime"
+  user: "backend" # Set up your user, or remove this value
+  group: "backend" # Set up your group, or remove this value
+
+temporal:
+  address: "localhost:7233"
+  namespace: 'default' # Configure a temporal namespace (you must create a namespace manually or use the default namespace named "default")
+  activities:
+    num_workers: 4 # Set up your worker count
+
+# Set up your values
+logs:
+  mode: production
+  output: stdout
+  err_output: stderr
+  encoding: json
+  level: error
+
+rpc:
+  listen: tcp://0.0.0.0:6001
+```
+
+Example configuration:
 ```yaml
 # config/packages/temporal.yaml
 temporal:
-  # Use address from ENV variable, by default will be localhost:7233
-  address: '%env(TEMPORAL_ADDRESS)%'
+  # Default address be localhost:7233
+  address: 'localhost:7233'
   worker:
     # Set up custom worker factory if you want to use custom WorkerFactory, 
     # accepts symfony service factory format 
     #
     # Details - https://symfony.com/doc/current/service_container/factories.html
     factory: Highcore\TemporalBundle\WorkerFactory
-    # Set up your own consumption queue for your Temporal Worker
-    queue: default
+    # Set up your own consumption queue for your Temporal Worker, you can set ENV or use string value
+    queue: '%env(TEMPORAL_WORKER_QUEUE)%'
     data-converter:
       # Set up your custom Temporal\DataConverter\DataConverterInterface implementation
       class: Temporal\DataConverter\DataConverter
@@ -55,6 +82,50 @@ temporal:
     # Set up custom workflow client factory
     # accepts any class which implements Highcore\TemporalBundle\WorkflowClientFactoryInterface
     factory: Highcore\TemporalBundle\WorkflowClientFactory
+```
+
+Example activity interface:
+```php
+<?php
+
+/**
+ * This file is part of Temporal package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Temporal\Samples\FileProcessing;
+
+use Temporal\Activity\ActivityInterface;
+
+#[ActivityInterface(prefix:"FileProcessing.")]
+interface StoreActivitiesInterface
+{
+    /**
+     * Upload file to remote location.
+     *
+     * @param string $localFileName file to upload
+     * @param string $url remote location
+     */
+    public function upload(string $localFileName, string $url): void;
+
+    /**
+     * Process file.
+     *
+     * @param string $inputFileName source file name @@return processed file name
+     * @return string
+     */
+    public function process(string $inputFileName): string;
+
+    /**
+     * Downloads file to local disk.
+     *
+     * @param string $url remote file location
+     * @return TaskQueueFilenamePair local task queue and downloaded file name
+     */
+    public function download(string $url): TaskQueueFilenamePair;
+}
 ```
 
 Example activity:
@@ -144,6 +215,94 @@ class StoreActivity implements StoreActivitiesInterface
 }
 ```
 
+Example workflow interface:
+```php
+<?php
+
+/**
+ * This file is part of Temporal package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Temporal\Samples\FileProcessing;
+
+use Temporal\Workflow\WorkflowInterface;
+use Temporal\Workflow\WorkflowMethod;
+
+#[WorkflowInterface]
+interface FileProcessingWorkflowInterface
+{
+    #[WorkflowMethod("FileProcessing")]
+    public function processFile(
+        string $sourceURL,
+        string $destinationURL
+    );
+}
+```
+
+Example workflow:
+```php
+<?php
+# https://github.com/temporalio/samples-php/blob/master/app/src/FileProcessing/FileProcessingWorkflow.php
+
+/**
+ * This file is part of Temporal package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Temporal\Samples\FileProcessing;
+
+use Carbon\CarbonInterval;
+use Temporal\Activity\ActivityOptions;
+use Temporal\Common\RetryOptions;
+use Temporal\Internal\Workflow\ActivityProxy;
+use Temporal\Workflow;
+
+class FileProcessingWorkflow implements FileProcessingWorkflowInterface
+{
+    public const DEFAULT_TASK_QUEUE = 'default';
+
+    /** @var ActivityProxy|StoreActivitiesInterface */
+    private $defaultStoreActivities;
+
+    public function __construct()
+    {
+        $this->defaultStoreActivities = Workflow::newActivityStub(
+            StoreActivitiesInterface::class,
+            ActivityOptions::new()
+                ->withScheduleToCloseTimeout(CarbonInterval::minute(5))
+                ->withTaskQueue(self::DEFAULT_TASK_QUEUE)
+        );
+    }
+
+    public function processFile(string $sourceURL, string $destinationURL)
+    {
+        /** @var TaskQueueFilenamePair $downloaded */
+        $downloaded = yield $this->defaultStoreActivities->download($sourceURL);
+
+        $hostSpecificStore = Workflow::newActivityStub(
+            StoreActivitiesInterface::class,
+            ActivityOptions::new()
+                ->withScheduleToCloseTimeout(CarbonInterval::minute(5))
+                ->withTaskQueue($downloaded->hostTaskQueue)
+        );
+
+        // Call processFile activity to zip the file.
+        // Call the activity to process the file using worker-specific task queue.
+        $processed = yield $hostSpecificStore->process($downloaded->filename);
+
+        // Call upload activity to upload the zipped file.
+        yield $hostSpecificStore->upload($processed, $destinationURL);
+
+        return 'OK';
+    }
+}
+```
+
 Register with symfony service container:
 ```php
 <?php
@@ -161,9 +320,63 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('temporal.activity.registry');
 ```
 
+Now you can run:
+```bash
+rr serve rr.yaml
+```
+
+And call workflow by:
+```php
+<?php
+declare(strict_types=1);
+
+namespace Highcore\TemporalBundle\Example;
+
+use Temporal\Client\WorkflowClientInterface;
+use Temporal\Workflow\WorkflowRunInterface;
+use Temporal\Client\WorkflowOptions;
+use Temporal\Common\RetryOptions;
+
+final class ExampleWorkflowRunner {
+
+    public function __construct(private readonly WorkflowClientInterface $workflowClient)
+    {
+    }
+    
+    public function run(): void
+    {
+        /** @var \Temporal\Samples\FileProcessing\FileProcessingWorkflowInterface $workflow */
+        $workflow = $this->workflowClient->newWorkflowStub(
+            \Temporal\Samples\FileProcessing\FileProcessingWorkflowInterface::class, 
+            WorkflowOptions::new()
+                ->withRetryOptions(
+                    RetryOptions::new()
+                        ->withMaximumAttempts(3)
+                        ->withNonRetryableExceptions(\LogicException::class)
+                )
+        );
+        
+        // Start Workflow async, with no-wait result
+        /** @var WorkflowRunInterface $result */
+        $result = $this->workflowClient->start($workflow, 'https://example.com/example_file', 's3://s3.example.com');
+        
+        echo 'Run ID: ' . $result->getExecution()->getRunID();
+        
+        // Or you can call workflow sync with wait result
+        $result = $workflow->processingFile('https://example.com/example_file', 's3://s3.example.com');
+        
+        echo $result; // OK
+    }
+
+}
+```
+
+More php examples you can find [here](https://github.com/temporalio/samples-php)
+
 ## Credits
 
-- [Official PHP SDK](https://github.com/temporalio/sdk-php)
+- [Official Temporal PHP SDK](https://github.com/temporalio/sdk-php)
+- [Official Temporal PHP Samples](https://github.com/temporalio/samples-php)
 - [Symfony Framework](https://github.com/symfony/symfony)
 
 ## License
