@@ -21,6 +21,7 @@ Use this command to install
 ## Usage
 
 Create config/workflows.php
+
 And register here your workflows, like a config/bundles.php for symfony
 
 Example config/workflows.php:
