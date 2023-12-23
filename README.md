@@ -20,7 +20,24 @@ Use this command to install
 
 ## Usage
 
-Example rr.yaml:
+Create config/workflows.php
+And register here your workflows, like a config/bundles.php for symfony
+
+Example config/workflows.php:
+```php
+<?php
+
+declare(strict_types=1);
+
+return [
+    // ...
+    Temporal\Samples\FileProcessing\FileProcessingWorkflow::class,
+    // ...
+];
+
+```
+
+Create rr.yaml:
 ```yaml
 version: "3"
 
