@@ -4,35 +4,58 @@ declare(strict_types=1);
 
 namespace Highcore\TemporalBundle\DependencyInjection;
 
-use Highcore\TemporalBundle\WorkerFactory;
+use Highcore\TemporalBundle\FactoryWorkerFactory;
+use Highcore\TemporalBundle\FactoryWorkerFactoryInterface;
 use Highcore\TemporalBundle\WorkflowClientFactory;
 use Highcore\TemporalBundle\WorkflowClientFactoryInterface;
+use Highcore\TemporalBundle\WorkflowLoadingMode;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
-use Temporal\Client\ClientOptions;
 use Temporal\Client\WorkflowClient;
+use Temporal\DataConverter\DataConverter;
 use Temporal\DataConverter\DataConverterInterface;
-use Temporal\Worker\WorkerFactoryInterface;
 use Temporal\WorkerFactory as TemporalWorkerFactory;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 final class TemporalExtension extends Extension
 {
-    const TEMPORAL_OPTIONS_SERVICE_ID = 'temporal.workflow_client.options';
+    public const DATA_CONVERTER_INVALID_DEFINITION = 'DataConverter "%s" should be registered in the service container or should be a class which implements "%s"';
+    public const WORKER_FACTORY_INVALID_DEFINITION = 'WorkerFactory "%s" should be registered in the service container or should be a class which implements "%s"';
+    public const WORKFLOW_CLIENT_FACTORY_INVALID_DEFINITION = 'WorkflowClientFactory "%s" should be registered in the service container or should be a class which implements "%s"';
 
     public function load(array $configs, ContainerBuilder $container): void
     {
         $config = $this->processConfiguration(new Configuration(), $configs);
 
-        $options = $config['workflow_client']['options'] ?? [];
-        $workflowClientFactoryClass = $config['workflow_client']['factory'] ?? WorkflowClientFactory::class;
+        $workflowClient = $config['workflow']['client'] ?? $config['workflow_client'];
+        $workflowLoadingMode = $config['workflow']['loading_mode'] ?? WorkflowLoadingMode::FileMode;
         $dataConverterConverters = $config['worker']['data_converter']['converters'];
-        $workerFactory = $config['worker']['factory'] ?? WorkerFactory::class;
-        $dataConverterClass = $config['worker']['data_converter']['class'];
+        $workflowClientFactoryId = $this->getDefinitionWithCheck(
+            container: $container,
+            shouldImplements: WorkflowClientFactory::class,
+            defaultDefinition: WorkflowClient::class,
+            definition: $workflowClient['factory'] ?? null,
+            failMessage: self::WORKFLOW_CLIENT_FACTORY_INVALID_DEFINITION
+        );
+        $workerFactoryId = $this->getDefinitionWithCheck(
+            container: $container,
+            shouldImplements: FactoryWorkerFactoryInterface::class,
+            defaultDefinition: FactoryWorkerFactory::class,
+            definition: $config['worker']['factory'] ?? null,
+            failMessage: self::WORKER_FACTORY_INVALID_DEFINITION
+        );
+        $dataConverterId = $this->getDefinitionWithCheck(
+            container: $container,
+            shouldImplements: DataConverterInterface::class,
+            defaultDefinition: DataConverter::class,
+            definition: $config['worker']['data_converter']['class'] ?? null,
+            failMessage: self::DATA_CONVERTER_INVALID_DEFINITION
+        );
+        $options = $workflowClient['options'] ?? [];
         $queue = $config['worker']['queue'] ?? 'default';
         $namespace = $options['namespace'] ?? 'default';
         $temporalRpcAddress = $config['address'];
@@ -40,20 +63,16 @@ final class TemporalExtension extends Extension
         $container->setParameter('temporal.worker.queue', $queue);
         $container->setParameter('temporal.address', $temporalRpcAddress);
         $container->setParameter('temporal.namespace', $namespace);
+        $container->setParameter('temporal.workflow.loading.mode', $workflowLoadingMode);
 
-        if (!is_a($workflowClientFactoryClass, WorkflowClientFactoryInterface::class, true)) {
-            throw new \RuntimeException(\sprintf('Class "%s" should implemenets "%s" interface.', $workflowClientFactoryClass, WorkflowClientFactoryInterface::class));
-        }
-
-        [$workerFactoryClass] = explode('::', $workerFactory);
+        [$workerFactoryClass] = explode('::', $workerFactoryId);
         if (!$container->hasDefinition($workerFactoryClass)) {
             $container->setDefinition($workerFactoryClass, (new Definition($workerFactoryClass))
                 ->setPublic(true)->setAutowired(true)->setAutoconfigured(true)
-                ->setArgument('$dataConverter', new Reference($dataConverterClass))
+                ->setArgument('$dataConverter', new Reference($dataConverterId))
             );
         }
 
-        $dataConverterDefinition = $container->register($dataConverterClass, $dataConverterClass);
         $serviceConverters = [];
         foreach ($dataConverterConverters as $converterId) {
             if (class_exists($converterId) && !$container->hasDefinition($converterId)) {
@@ -66,34 +85,67 @@ final class TemporalExtension extends Extension
 
             $serviceConverters[] = new Reference($converterId);
         }
+        $dataConverterDefinition = !$container->hasDefinition($dataConverterId)
+            ? $container->register($dataConverterId, $dataConverterId)
+            : $container->getDefinition($dataConverterId);
         $dataConverterDefinition->setArguments($serviceConverters);
 
         if (!$container->hasAlias(DataConverterInterface::class)) {
-            $container->setAlias(DataConverterInterface::class, $dataConverterClass);
+            $container->setAlias(DataConverterInterface::class, $dataConverterId);
         }
 
-        if (!$container->hasDefinition($workflowClientFactoryClass)) {
-            $container->setDefinition($workflowClientFactoryClass, (new Definition($workflowClientFactoryClass))
+        if (!$container->hasDefinition($workflowClientFactoryId)) {
+            $container->setDefinition($workflowClientFactoryId, (new Definition($workflowClientFactoryId))
                 ->setPublic(true)->setAutowired(true)->setAutoconfigured(true)
-                ->addMethodCall('setDataConverter', [new Reference($dataConverterClass)])
+                ->addMethodCall('setDataConverter', [new Reference($dataConverterId)])
                 ->addMethodCall('setAddress', [$temporalRpcAddress])
                 ->addMethodCall('setOptions', [$options])
             );
         }
 
-        $workerFactory = str_contains('::', $workerFactory) ? $workerFactory : new Reference($workerFactoryClass);
+        $workerFactoryId = str_contains('::', $workerFactoryId) ? $workerFactoryId : new Reference($workerFactoryClass);
         $container->register(TemporalWorkerFactory::class, TemporalWorkerFactory::class)
-            ->setFactory($workerFactory);
+            ->setFactory($workerFactoryId);
         $container->register(WorkflowClient::class, WorkflowClient::class)
-            ->setFactory([new Reference($workflowClientFactoryClass), '__invoke']);
+            ->setFactory([new Reference($workflowClientFactoryId), '__invoke']);
 
-        $container->setAlias(WorkerFactoryInterface::class, TemporalWorkerFactory::class);
+        $container->setAlias(FactoryWorkerFactoryInterface::class, TemporalWorkerFactory::class);
 
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.php');
+    }
 
-        if (!$container->hasDefinition($dataConverterClass)) {
-            throw new \LogicException('Data Converter Class "%s" should be registered.');
+    /**
+     * @param ContainerBuilder $container
+     * @param class-string $shouldImplements
+     * @param class-string $defaultDefinition
+     * @param class-string|string|null $definition
+     * @param string $failMessage
+     * @return string
+     */
+    public function getDefinitionWithCheck(
+        ContainerBuilder $container,
+        string $shouldImplements,
+        string $defaultDefinition,
+        ?string $definition,
+        string $failMessage,
+    ): string {
+        $definitionId = $definition ??= $defaultDefinition;
+
+        if (!class_exists($definitionId)) {
+            $definitionId = !$container->hasDefinition($definitionId)
+                ? null
+                : $container->getDefinition($definitionId)->getClass();
         }
+
+        if (null === $definitionId || !is_a($definitionId, $shouldImplements, true)) {
+            throw new InvalidConfigurationException(sprintf(
+                $failMessage,
+                $definitionId,
+                $shouldImplements
+            ));
+        }
+
+        return $definition;
     }
 }

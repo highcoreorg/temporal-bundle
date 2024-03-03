@@ -4,34 +4,47 @@ declare(strict_types=1);
 
 namespace Highcore\TemporalBundle;
 
+use Highcore\Component\Registry\ServiceRegistryInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Temporal\Worker\WorkerFactoryInterface;
-use Highcore\TemporalBundle\Registry\ActivityRegistry;
 
+#[AsCommand(name: 'temporal:workflow:runtime')]
 final class WorkflowRuntimeCommand extends Command
 {
-    protected static $defaultName = 'temporal:workflow:runtime';
-
-    private WorkerFactoryInterface $workerFactory;
-    private ActivityRegistry $activityRegistry;
-    private KernelInterface $kernel;
-    private ?string $workerQueue;
-
     public function __construct(
-        WorkerFactoryInterface $workerFactory,
-        ActivityRegistry $activityRegistry,
-        KernelInterface $kernel,
-        ?string $workerQueue = null
+        private readonly WorkerFactoryInterface $workerFactory,
+        private readonly ServiceRegistryInterface $activityRegistry,
+        private readonly ServiceRegistryInterface $workflowRegistry,
+        private readonly WorkflowLoadingMode $workflowLoadingMode,
+        private readonly KernelInterface $kernel,
+        private readonly ?string $workerQueue = null
     ) {
         parent::__construct();
-        $this->kernel = $kernel;
-        $this->workerQueue = $workerQueue;
-        $this->activityRegistry = $activityRegistry;
-        $this->workerFactory = $workerFactory;
+    }
+
+    /**
+     * @return array
+     */
+    public function getFromConfigFile(): array
+    {
+        $workflowTypesConfig = $this->kernel->getProjectDir() . '/config/workflows.php';
+
+        if (!\file_exists($workflowTypesConfig)) {
+            return [];
+        }
+
+        $workflowTypes = require $workflowTypesConfig;
+
+        if (!\is_array($workflowTypes)) {
+            throw new \RuntimeException('Workflow config should return array.');
+        }
+
+        return $workflowTypes;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -61,18 +74,10 @@ final class WorkflowRuntimeCommand extends Command
 
     private function getWorkflowTypes(): array
     {
-        $workflowTypesConfig = $this->kernel->getProjectDir() . '/config/workflows.php';
-
-        if (!\file_exists($workflowTypesConfig)) {
-            return [];
+        if ($this->workflowLoadingMode === WorkflowLoadingMode::ContainerMode) {
+            return $this->workflowRegistry->all();
         }
 
-        $workflowTypes = require $workflowTypesConfig;
-
-        if (!\is_array($workflowTypes)) {
-            throw new \RuntimeException('Workflow config should return array.');
-        }
-
-        return $workflowTypes;
+        return $this->getFromConfigFile();
     }
 }

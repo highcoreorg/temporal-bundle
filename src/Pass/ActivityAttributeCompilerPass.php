@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Highcore\TemporalBundle\Registry\ActivityRegistry;
 
-final class ActivityCompilerPass implements CompilerPassInterface
+final class ActivityAttributeCompilerPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
     {
@@ -18,7 +18,6 @@ final class ActivityCompilerPass implements CompilerPassInterface
         }
 
         $definition = $container->findDefinition(ActivityRegistry::class);
-        $taggedServices = $container->findTaggedServiceIds('temporal.activity.registry');
 
         foreach ($taggedServices as $id => $tags) {
             $definition->addMethodCall('add', [new Reference($id)]);

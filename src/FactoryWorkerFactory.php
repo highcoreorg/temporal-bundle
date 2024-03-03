@@ -7,7 +7,7 @@ namespace Highcore\TemporalBundle;
 use Temporal\DataConverter\DataConverter;
 use Temporal\Worker\WorkerFactoryInterface as TemporalWorkerFactory;
 
-final class WorkerFactory
+final class FactoryWorkerFactory implements FactoryWorkerFactoryInterface
 {
     private DataConverter $dataConverter;
 
