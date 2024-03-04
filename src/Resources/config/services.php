@@ -11,7 +11,6 @@ return static function (ContainerConfigurator $configurator): void {
         ->autowire()
         ->autoconfigure();
 
-    $services->set(Highcore\TemporalBundle\Registry\ActivityRegistry::class);
     $services->set(Highcore\TemporalBundle\WorkflowRuntimeCommand::class)
         ->arg('$workerFactory', service(Temporal\Worker\WorkerFactoryInterface::class))
         ->arg('$workflowRegistry', service(TemporalBundle::WORKFLOW_REGISTRY_DEFINITION))

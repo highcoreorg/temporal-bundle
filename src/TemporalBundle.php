@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Highcore\TemporalBundle;
 
-use Highcore\CommandBus\AsContextMiddleware;
-use Highcore\CommandBus\Context\ContextMiddleware;
 use Highcore\Component\Registry\ServiceRegistry;
 use Highcore\Registry\Bundle\DependencyInjection\Pass\ServiceAttributeRegistryPass;
-use Highcore\TemporalBundle\Pass\ActivityTagCompilerPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Temporal\Activity\ActivityInterface;

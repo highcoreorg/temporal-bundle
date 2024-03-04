@@ -36,8 +36,8 @@ final class TemporalExtension extends Extension
         $dataConverterConverters = $config['worker']['data_converter']['converters'];
         $workflowClientFactoryId = $this->getDefinitionWithCheck(
             container: $container,
-            shouldImplements: WorkflowClientFactory::class,
-            defaultDefinition: WorkflowClient::class,
+            shouldImplements: WorkflowClientFactoryInterface::class,
+            defaultDefinition: WorkflowClientFactory::class,
             definition: $workflowClient['factory'] ?? null,
             failMessage: self::WORKFLOW_CLIENT_FACTORY_INVALID_DEFINITION
         );
@@ -65,9 +65,9 @@ final class TemporalExtension extends Extension
         $container->setParameter('temporal.namespace', $namespace);
         $container->setParameter('temporal.workflow.loading.mode', $workflowLoadingMode);
 
-        [$workerFactoryClass] = explode('::', $workerFactoryId);
-        if (!$container->hasDefinition($workerFactoryClass)) {
-            $container->setDefinition($workerFactoryClass, (new Definition($workerFactoryClass))
+        [$workerFactoryIdValue] = explode('::', $workerFactoryId);
+        if (!$container->hasDefinition($workerFactoryIdValue)) {
+            $container->setDefinition($workerFactoryIdValue, (new Definition($workerFactoryIdValue))
                 ->setPublic(true)->setAutowired(true)->setAutoconfigured(true)
                 ->setArgument('$dataConverter', new Reference($dataConverterId))
             );
@@ -103,13 +103,11 @@ final class TemporalExtension extends Extension
             );
         }
 
-        $workerFactoryId = str_contains('::', $workerFactoryId) ? $workerFactoryId : new Reference($workerFactoryClass);
+        $factoryWorkerFactory = str_contains('::', $workerFactoryId) ? $workerFactoryId : new Reference($workerFactoryIdValue);
         $container->register(TemporalWorkerFactory::class, TemporalWorkerFactory::class)
-            ->setFactory($workerFactoryId);
+            ->setFactory($factoryWorkerFactory);
         $container->register(WorkflowClient::class, WorkflowClient::class)
             ->setFactory([new Reference($workflowClientFactoryId), '__invoke']);
-
-        $container->setAlias(FactoryWorkerFactoryInterface::class, TemporalWorkerFactory::class);
 
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.php');
@@ -141,7 +139,7 @@ final class TemporalExtension extends Extension
         if (null === $definitionId || !is_a($definitionId, $shouldImplements, true)) {
             throw new InvalidConfigurationException(sprintf(
                 $failMessage,
-                $definitionId,
+                $definition,
                 $shouldImplements
             ));
         }
