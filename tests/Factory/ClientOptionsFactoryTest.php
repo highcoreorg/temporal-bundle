@@ -12,7 +12,7 @@ class ClientOptionsFactoryTest extends TestCase
     /**
      * @dataProvider data
      */
-    public function testCreateFromArray($namespace, $identity, $queryRejectionCondition)
+    public function testCreateFromArray($namespace, $identity, $queryRejectionCondition): void
     {
         $factory = new ClientOptionsFactory();
 

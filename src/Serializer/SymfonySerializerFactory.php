@@ -6,7 +6,7 @@ namespace Highcore\TemporalBundle\Serializer;
 
 use Symfony\Component\Serializer\Serializer;
 
-interface SerializerFactory
+interface SymfonySerializerFactory
 {
     public function create(): Serializer;
 }

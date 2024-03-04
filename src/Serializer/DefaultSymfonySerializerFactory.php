@@ -12,7 +12,7 @@ use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
-final class DefaultSerializerFactory implements SerializerFactory
+final class DefaultSymfonySerializerFactory implements SymfonySerializerFactory
 {
     public function create(): Serializer
     {

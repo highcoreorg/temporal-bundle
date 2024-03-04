@@ -4,33 +4,35 @@ declare(strict_types=1);
 
 namespace Highcore\TemporalBundle\DataConverter;
 
-use Highcore\TemporalBundle\Serializer\DefaultSerializerFactory;
-use Highcore\TemporalBundle\Serializer\SerializerFactory;
+use Highcore\TemporalBundle\Serializer\DefaultSymfonySerializerFactory;
+use Highcore\TemporalBundle\Serializer\SymfonySerializerFactory;
 use Symfony\Component\Serializer\Serializer;
 use Temporal\Api\Common\V1\Payload;
 use Temporal\DataConverter\Converter;
 use Temporal\DataConverter\Type;
 use Temporal\Exception\DataConverterException;
 
-final class ClassObjectConverter extends Converter
+final class SymfonySerializerJsonClassObjectConverter extends Converter
 {
-    public const METADATA_ENCODING_CLASS_OBJECT_JSON_KEY = 'php/json-class-object';
-
     private ?Serializer $serializer = null;
 
-    public function __construct(private readonly SerializerFactory $serializerFactory = new DefaultSerializerFactory())
+    public function __construct(private readonly SymfonySerializerFactory $serializerFactory = new DefaultSymfonySerializerFactory())
     {
     }
 
     public function getEncodingType(): string
     {
-        return self::METADATA_ENCODING_CLASS_OBJECT_JSON_KEY;
+        return MetadataType::SYMFONY_SERIALIZER_CLASS_OBJECT_JSON;
     }
 
     public function toPayload($value): ?Payload
     {
-        if (!is_object($value) || 'stdClass' === get_debug_type($value)) {
+        if (!is_object($value)) {
             return null;
+        }
+
+        if ('stdClass' === get_debug_type($value)) {
+            return $this->create(json_encode($value, JSON_THROW_ON_ERROR));
         }
 
         return $this->create($this->getSerializer()->serialize($value, 'json'));
