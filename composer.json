@@ -11,9 +11,9 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.2",
         "ext-json": "*",
-        "temporal/sdk": "^2.5",
+        "temporal/sdk": "^2.10",
         "symfony/dependency-injection": "^6.4 || ^7.0",
         "symfony/http-kernel": "^6.4 || ^7.0",
         "symfony/config": "^6.4 || ^7.0",
