@@ -83,14 +83,14 @@ temporal:
       # Set up your custom Temporal\DataConverter\DataConverterInterface implementation
       class: Temporal\DataConverter\DataConverter
       # Customize the data converters, DO NOT CHANGE if you do not know what it is
-      # Details - https://legacy-documentation-sdks.temporal.io/typescript/data-converters
+      # Details - https://docs.temporal.io/dev-guide/php/foundations#activity-return-values
       #
       # Sorting order from top to bottom is very, very important
       converters:
         - Temporal\DataConverter\NullConverter
         - Temporal\DataConverter\BinaryConverter
         - Temporal\DataConverter\ProtoJsonConverter
-        - Highcore\TemporalBundle\DataConverter\ClassObjectConverter
+        - Highcore\TemporalBundle\DataConverter\SymfonySerializerJsonClassObjectConverter
         - Temporal\DataConverter\JsonConverter
   workflow-client:
     options:
