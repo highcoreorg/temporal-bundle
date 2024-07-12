@@ -11,11 +11,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Temporal\Worker\WorkerFactoryInterface;
 use Highcore\TemporalBundle\Registry\ActivityRegistry;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'temporal:workflow:runtime')]
 final class WorkflowRuntimeCommand extends Command
 {
-    protected static $defaultName = 'temporal:workflow:runtime';
-
     private WorkerFactoryInterface $workerFactory;
     private ActivityRegistry $activityRegistry;
     private KernelInterface $kernel;
