@@ -6,6 +6,8 @@ namespace Highcore\TemporalBundle;
 
 use Highcore\Component\Registry\ServiceRegistry;
 use Highcore\Registry\Bundle\DependencyInjection\Pass\ServiceAttributeRegistryPass;
+use Highcore\TemporalBundle\Attribute\AsActivity;
+use Highcore\TemporalBundle\Attribute\AsWorkflow;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Temporal\Activity\ActivityInterface;
@@ -19,14 +21,14 @@ final class TemporalBundle extends Bundle
     public function build(ContainerBuilder $container): void
     {
         $container->addCompilerPass(new ServiceAttributeRegistryPass(
-            definition: self::ACTIVITY_REGISTRY_DEFINITION,
-            targetClassAttribute: ActivityInterface::class,
+            definitionId: self::ACTIVITY_REGISTRY_DEFINITION,
             definitionClass: ServiceRegistry::class,
+            targetClassAttribute: AsActivity::class,
         ));
         $container->addCompilerPass(new ServiceAttributeRegistryPass(
-            definition: self::WORKFLOW_REGISTRY_DEFINITION,
-            targetClassAttribute: WorkflowInterface::class,
+            definitionId: self::WORKFLOW_REGISTRY_DEFINITION,
             definitionClass: ServiceRegistry::class,
+            targetClassAttribute: AsWorkflow::class,
         ));
     }
 }

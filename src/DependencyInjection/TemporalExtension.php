@@ -53,7 +53,8 @@ final class TemporalExtension extends Extension
             shouldImplements: DataConverterInterface::class,
             defaultDefinition: DataConverter::class,
             definition: $config['worker']['data_converter']['class'] ?? null,
-            failMessage: self::DATA_CONVERTER_INVALID_DEFINITION
+            failMessage: self::DATA_CONVERTER_INVALID_DEFINITION,
+            allowRegisterOnTheFly: true,
         );
         $options = $workflowClient['options'] ?? [];
         $queue = $config['worker']['queue'] ?? 'default';
@@ -127,6 +128,7 @@ final class TemporalExtension extends Extension
         string $defaultDefinition,
         ?string $definition,
         string $failMessage,
+        bool $allowRegisterOnTheFly = false,
     ): string {
         $definitionId = $definition ??= $defaultDefinition;
 
@@ -136,7 +138,7 @@ final class TemporalExtension extends Extension
                 : $container->getDefinition($definitionId)->getClass();
         }
 
-        if (null === $definitionId || !is_a($definitionId, $shouldImplements, true)) {
+        if ((null === $definitionId && !$allowRegisterOnTheFly) || !is_a($definitionId, $shouldImplements, true)) {
             throw new InvalidConfigurationException(sprintf(
                 $failMessage,
                 $definition,

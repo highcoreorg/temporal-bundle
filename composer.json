@@ -13,14 +13,15 @@
     "require": {
         "php": ">=8.2",
         "ext-json": "*",
-        "temporal/sdk": "^2.10",
+        "temporal/sdk": "^2.12",
         "symfony/dependency-injection": "^6.4 || ^7.0",
         "symfony/http-kernel": "^6.4 || ^7.0",
         "symfony/config": "^6.4 || ^7.0",
         "symfony/console": "^6.4 || ^7.0",
         "symfony/serializer": "^6.4 || ^7.0",
         "symfony/property-info": "^6.4 || ^7.0",
-        "highcore/registry-bundle": "^1.4"
+        "highcore/registry-bundle": "^2.0",
+        "symfony/runtime": "^6.4 || ^7.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.3"
@@ -40,7 +41,8 @@
     },
     "config": {
         "allow-plugins": {
-            "symfony/flex": true
+            "symfony/flex": true,
+            "symfony/runtime": true
         }
     }
 }

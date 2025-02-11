@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Highcore\TemporalBundle;
 
-use Highcore\TemporalBundle\DataConverter\SymfonySerializerJsonClassObjectConverter;
 use Highcore\TemporalBundle\DependencyInjection\Configuration;
 use Highcore\TemporalBundle\WorkflowLoadingMode;
 use PHPUnit\Framework\TestCase;
@@ -12,12 +11,9 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Highcore\TemporalBundle\FactoryWorkerFactory;
 use Temporal\Api\Enums\V1\QueryRejectCondition;
-use Temporal\DataConverter\BinaryConverter;
 use Temporal\DataConverter\DataConverter;
 use Highcore\TemporalBundle\WorkflowClientFactory;
-use Temporal\DataConverter\JsonConverter;
 use Temporal\DataConverter\NullConverter;
-use Temporal\DataConverter\ProtoJsonConverter;
 
 class ConfigurationTest extends TestCase
 {

@@ -43,9 +43,10 @@ Create rr.yaml:
 version: "3"
 
 server:
-  command: "php bin/console temporal:workflow:runtime"
-  user: "backend" # Set up your user, or remove this value
-  group: "backend" # Set up your group, or remove this value
+  command: "php public/index.php"
+  relay: pipes
+  env:
+    - APP_RUNTIME: Highcore\TemporalBundle\Runtime\Runtime 
 
 temporal:
   address: "localhost:7233"
@@ -76,7 +77,7 @@ temporal:
     # accepts symfony service factory format 
     #
     # Details - https://symfony.com/doc/current/service_container/factories.html
-    factory: Highcore\TemporalBundle\WorkerFactory
+    factory: Highcore\TemporalBundle\FactoryWorkerFactory
     # Set up your own consumption queue for your Temporal Worker, you can set ENV or use string value
     queue: '%env(TEMPORAL_WORKER_QUEUE)%'
     data-converter:
@@ -147,6 +148,7 @@ interface StoreActivitiesInterface
 ```
 
 Example activity:
+
 ```php
 <?php
 # https://github.com/temporalio/samples-php/blob/master/app/src/FileProcessing/StoreActivity.php
@@ -160,9 +162,10 @@ Example activity:
 
 namespace Temporal\Samples\FileProcessing;
 
-use Psr\Log\LoggerInterface;
+use Highcore\TemporalBundle\Attribute\AsActivity;use Psr\Log\LoggerInterface;
 use Temporal\SampleUtils\Logger;
 
+#[AsActivity]
 class StoreActivity implements StoreActivitiesInterface
 {
     private static string $taskQueue;
@@ -261,6 +264,7 @@ interface FileProcessingWorkflowInterface
 ```
 
 Example workflow:
+
 ```php
 <?php
 # https://github.com/temporalio/samples-php/blob/master/app/src/FileProcessing/FileProcessingWorkflow.php
@@ -275,11 +279,12 @@ Example workflow:
 namespace Temporal\Samples\FileProcessing;
 
 use Carbon\CarbonInterval;
-use Temporal\Activity\ActivityOptions;
+use Highcore\TemporalBundle\Attribute\AsWorkflow;use Temporal\Activity\ActivityOptions;
 use Temporal\Common\RetryOptions;
 use Temporal\Internal\Workflow\ActivityProxy;
 use Temporal\Workflow;
 
+#[AsWorkflow]
 class FileProcessingWorkflow implements FileProcessingWorkflowInterface
 {
     public const DEFAULT_TASK_QUEUE = 'default';
@@ -319,23 +324,6 @@ class FileProcessingWorkflow implements FileProcessingWorkflowInterface
         return 'OK';
     }
 }
-```
-
-Register with symfony service container:
-```php
-<?php
-
-return static function (ContainerConfigurator $configurator): void {
-    $services = $configurator->services();
-    $services->defaults()
-        ->public()
-        ->autowire(true)
-        ->autoconfigure(true);
-
-    $services->set(Temporal\Samples\FileProcessing\StoreActivity::class)
-        // Setting a "label to your activity" will add the activity to the ActivityRegistry,
-        // allowing your employee to use this activity in your Workflow
-        ->tag('temporal.activity.registry');
 ```
 
 Now you can run:
