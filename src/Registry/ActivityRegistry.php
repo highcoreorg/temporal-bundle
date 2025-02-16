@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Highcore\TemporalBundle\Registry;
 
 use Temporal\Activity\ActivityInterface;
+use Temporal\Activity\LocalActivityInterface;
 
 final class ActivityRegistry
 {
@@ -30,7 +31,7 @@ final class ActivityRegistry
 
     private function isActivity(\ReflectionObject $reflection): bool
     {
-        if (\count($reflection->getAttributes(ActivityInterface::class)) >= 1) {
+        if (\count($reflection->getAttributes(ActivityInterface::class)) >= 1 || \count($reflection->getAttributes(LocalActivityInterface::class)) >= 1) {
             return true;
         }
 
