@@ -22,6 +22,8 @@ final readonly class Runner implements RunnerInterface
 
     public function run(): int
     {
+        $this->kernel->boot();
+
         /** @var LoggerInterface $logger */
         $logger = $this->kernel->getContainer()->get(
             LoggerInterface::class,
