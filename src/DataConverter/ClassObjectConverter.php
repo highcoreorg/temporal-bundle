@@ -29,7 +29,7 @@ final class ClassObjectConverter extends Converter
 
     public function toPayload($value): ?Payload
     {
-        if (!is_object($value) || 'stdClass' === get_debug_type($value)) {
+        if (!is_object($value) || 'stdClass' === get_debug_type($value) || is_array($value)) {
             return null;
         }
 

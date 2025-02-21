@@ -44,6 +44,8 @@ final class WorkflowRuntimeCommand extends Command
         }
 
         $queueName = $this->workerQueue ?? WorkerFactoryInterface::DEFAULT_TASK_QUEUE;
+
+
         $worker = $this->workerFactory->newWorker($queueName);
 
         foreach ($this->getWorkflowTypes() as $workflowType) {
@@ -53,6 +55,7 @@ final class WorkflowRuntimeCommand extends Command
         foreach ($this->activityRegistry->all() as $activity) {
             $worker->registerActivity(get_class($activity), static fn() => $activity);
         }
+    
 
         $this->workerFactory->run();
 
