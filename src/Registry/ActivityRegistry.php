@@ -18,7 +18,7 @@ final class ActivityRegistry
         if (!$this->isActivity($reflection)) {
             throw new \LogicException(\sprintf(
                 'Class "%s" does not have "%s" or "%s" attribute.',
-                $activity::class, ActivityInterface::class,LocalActivityInterface::class));
+                $activity::class, ActivityInterface::class, LocalActivityInterface::class));
         }
 
         $this->activities[] = $activity;
@@ -31,12 +31,16 @@ final class ActivityRegistry
 
     private function isActivity(\ReflectionObject $reflection): bool
     {
-        if (\count($reflection->getAttributes(ActivityInterface::class)) >= 1 || \count($reflection->getAttributes(LocalActivityInterface::class)) >= 1) {
+        if (\count($reflection->getAttributes(ActivityInterface::class)) >= 1
+            || \count($reflection->getAttributes(LocalActivityInterface::class)) >= 1
+        ) {
             return true;
         }
 
         foreach ($reflection->getInterfaces() as $interface) {
-            if (\count($interface->getAttributes(ActivityInterface::class)) >= 1 || \count($interface->getAttributes(LocalActivityInterface::class)) >= 1) {
+            if (\count($interface->getAttributes(ActivityInterface::class)) >= 1
+                || \count($interface->getAttributes(LocalActivityInterface::class)) >= 1
+            ) {
                 return true;
             }
         }

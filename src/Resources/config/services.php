@@ -17,5 +17,6 @@ return static function (ContainerConfigurator $configurator): void {
         ->arg('$workerQueue', '%temporal.worker.queue%')
         ->arg('$kernel', service('kernel'))
         ->tag('console.command');
+
     $services->alias(Temporal\Client\WorkflowClientInterface::class, Temporal\Client\WorkflowClient::class);
 };
