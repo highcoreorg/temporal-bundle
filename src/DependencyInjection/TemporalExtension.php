@@ -29,7 +29,7 @@ final class TemporalExtension extends Extension
 {
     const TEMPORAL_OPTIONS_SERVICE_ID = 'temporal.workflow_client.options';
 
-    private function isTestingEnabled(array $options): bool
+    private function isTestingEnabled(array $config): bool
     {
         return $config['worker']['testing']['enabled'] ?? false;
     }
