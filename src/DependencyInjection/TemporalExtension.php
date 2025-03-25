@@ -84,7 +84,7 @@ final class TemporalExtension extends Extension
         return $config['worker']['factory'] ?? $default;
     }
 
-    private function extractActivityInvocationCacheClass(array $config, string $default = InMemoryActivityInvocationCache::class): string
+    private function extractActivityInvocationCacheClass(array $config, string $default = RoadRunnerActivityInvocationCache::class): string
     {
         return $config['worker']['testing']['activity_invocation_cache'] ?? $default;
     }
