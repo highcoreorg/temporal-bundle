@@ -229,7 +229,7 @@ final class TemporalExtension extends Extension
 
         return $container->register(RoadRunnerActivityInvocationCache::class)
             ->setFactory(sprintf('%s::create', RoadRunnerActivityInvocationCache::class))
-            ->addArgument('$dataConverter', new Reference($this->extractDataConverterFacadeClass($config, $defaultDataConverterFacadeClass)))
+            ->setArgument('$dataConverter', new Reference($this->extractDataConverterFacadeClass($config, $defaultDataConverterFacadeClass)))
         ;
     }
 
@@ -243,8 +243,7 @@ final class TemporalExtension extends Extension
         }
 
         return $container->register(InMemoryActivityInvocationCache::class)
-            ->setFactory(sprintf('%s::create', InMemoryActivityInvocationCache::class))
-            ->addArgument('$dataConverter', new Reference($this->extractDataConverterFacadeClass($config, $defaultDataConverterFacadeClass)))
+            ->setArgument('$dataConverter', new Reference($this->extractDataConverterFacadeClass($config, $defaultDataConverterFacadeClass)))
         ;
     }
 
@@ -291,6 +290,9 @@ final class TemporalExtension extends Extension
 
     public function load(array $configs, ContainerBuilder $container): void
     {
+        $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        $loader->load('services.php');
+
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $options = $config['workflow_client']['options'] ?? [];
@@ -301,17 +303,15 @@ final class TemporalExtension extends Extension
 
         $this->registerDataConverterService($config, $container);
         $this->registerDataConverterAlias($config, $container);
-        $this->registerWorkerFactoryService($config, $container);
-        $this->registerWorkerFactoryAlias($config, $container);
         $this->registerWorkflowClientFactoryService($config, $container);
         $this->registerWorkflowClientService($config, $container);
 
-        if ($this->isTestingEnabled($options)) {
+        if ($this->isTestingEnabled($config)) {
             $this->registerActivityInvocationCacheService($config, $container);
             $this->registerActivityInvocationCacheAlias($config, $container);
         }
 
-        $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
-        $loader->load('services.php');
+        $this->registerWorkerFactoryService($config, $container);
+        $this->registerWorkerFactoryAlias($config, $container);
     }
 }
