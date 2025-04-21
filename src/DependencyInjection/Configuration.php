@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Highcore\TemporalBundle\DependencyInjection;
 
-use Highcore\TemporalBundle\WorkerFactory;
 use Highcore\TemporalBundle\WorkflowClientFactory;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Temporal\Api\Enums\V1\QueryRejectCondition;
 use Temporal\DataConverter\DataConverter;
+use Temporal\Worker\ActivityInvocationCache\InMemoryActivityInvocationCache;
+use Temporal\WorkerFactory;
 
 final class Configuration implements ConfigurationInterface
 {
@@ -32,6 +33,13 @@ final class Configuration implements ConfigurationInterface
                                     ->prototype('scalar')->end()
                                 ->end()
                                 ->scalarNode('class')->defaultValue(DataConverter::class)->end()
+                            ->end()
+                        ->end()
+                        ->arrayNode('testing')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->booleanNode('enabled')->defaultFalse()->end()
+                                ->scalarNode('activity_invocation_cache')->defaultValue(InMemoryActivityInvocationCache::class)->end()
                             ->end()
                         ->end()
                     ->end()
